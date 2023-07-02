@@ -1,4 +1,5 @@
 import logging, time, datetime
+import asyncio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -34,11 +35,11 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_TVSHOW,
 )
 from homeassistant.const import (
-    CONF_TOKEN, 
+    CONF_TOKEN,
     CONF_URL,
     CONF_NAME,
-    STATE_OFF, 
-    STATE_ON, 
+    STATE_OFF,
+    STATE_ON,
     STATE_PLAYING,
     STATE_PAUSED,
     STATE_IDLE,
@@ -62,7 +63,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-) -> None:    
+) -> None:
     media_player = CloudMusicMediaPlayer(hass)
 
     await hass.async_add_executor_job(track_time_interval, hass, media_player.interval, TIME_BETWEEN_UPDATES)
@@ -112,14 +113,20 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
                 if self.before_state['media_duration'] > 0 and self.before_state['media_duration'] - self.before_state['media_duration'] <= 5:
                     # 判断源音乐播放器状态
                     if self.before_state['state'] == STATE_PLAYING and self.current_state == STATE_IDLE:
-                        self.hass.async_create_task(self.async_media_next_track())
+                        #  self.hass.async_create_task(self.async_media_next_track())
+
+                        asyncio.run_coroutine_threadsafe( self.async_media_next_track(), hass.loop)
+
                         self.before_state = None
                         return
 
                 # 源播放器空闲 & 当前正在播放
                 if self.before_state['media_duration'] == 0 and self.before_state['media_position'] == 0 and self.current_state == STATE_IDLE \
                     and self._attr_media_duration == 0 and self._attr_media_position == 0 and self._attr_state == STATE_PLAYING:
-                        self.hass.async_create_task(self.async_media_next_track())
+                        #  self.hass.async_create_task(self.async_media_next_track())
+
+                        asyncio.run_coroutine_threadsafe( self.async_media_next_track(), hass.loop)
+
                         self.before_state = None
                         return
 
@@ -187,7 +194,7 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
     async def async_play_media(self, media_type, media_id, **kwargs):
 
         self._attr_state = STATE_PAUSED
-        
+
         media_content_id = media_id
         result = await self.cloud_music.async_play_media(self, self.cloud_music, media_id)
         if result is not None:
