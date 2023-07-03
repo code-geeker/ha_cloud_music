@@ -115,7 +115,7 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
                     if self.before_state['state'] == STATE_PLAYING and self.current_state == STATE_IDLE:
                         #  self.hass.async_create_task(self.async_media_next_track())
 
-                        asyncio.run_coroutine_threadsafe( self.async_media_next_track(), hass.loop)
+                        asyncio.run_coroutine_threadsafe( self.async_media_next_track(), self.hass.loop)
 
                         self.before_state = None
                         return
@@ -125,7 +125,7 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
                     and self._attr_media_duration == 0 and self._attr_media_position == 0 and self._attr_state == STATE_PLAYING:
                         #  self.hass.async_create_task(self.async_media_next_track())
 
-                        asyncio.run_coroutine_threadsafe( self.async_media_next_track(), hass.loop)
+                        asyncio.run_coroutine_threadsafe( self.async_media_next_track(), self.hass.loop)
 
                         self.before_state = None
                         return
