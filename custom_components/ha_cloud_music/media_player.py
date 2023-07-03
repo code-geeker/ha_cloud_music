@@ -213,7 +213,7 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
             query = parse_query(url.query)
             songId = query.get('id')
             url, fee = await self.cloud_music.song_url(songId)
-            media_content_id = url
+            media_content_id = url + '|verifypeer=false'
 
 
         self._attr_media_content_id = media_content_id
