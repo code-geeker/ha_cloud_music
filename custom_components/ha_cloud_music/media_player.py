@@ -1,6 +1,10 @@
 import logging, time, datetime
 import asyncio
 
+
+
+from urllib.parse import urlparse, parse_qs, parse_qsl, quote
+from .utils import parse_query
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.config_entries import ConfigEntry
@@ -114,9 +118,7 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
                     # 判断源音乐播放器状态
                     if self.before_state['state'] == STATE_PLAYING and self.current_state == STATE_IDLE:
                         #  self.hass.async_create_task(self.async_media_next_track())
-
                         asyncio.run_coroutine_threadsafe( self.async_media_next_track(), self.hass.loop)
-
                         self.before_state = None
                         return
 
@@ -124,9 +126,7 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
                 if self.before_state['media_duration'] == 0 and self.before_state['media_position'] == 0 and self.current_state == STATE_IDLE \
                     and self._attr_media_duration == 0 and self._attr_media_position == 0 and self._attr_state == STATE_PLAYING:
                         #  self.hass.async_create_task(self.async_media_next_track())
-
                         asyncio.run_coroutine_threadsafe( self.async_media_next_track(), self.hass.loop)
-
                         self.before_state = None
                         return
 
@@ -207,6 +207,14 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
             else:
                 # 添加播放列表到播放器
                 media_content_id = self.playlist[self.playindex].url
+
+        if media_content_id.find("cloud_music/url") != -1:
+            url = urlparse(media_content_id)
+            query = parse_query(url.query)
+            songId = query.get('id')
+            url, fee = await self.cloud_music.song_url(songId)
+            media_content_id = url
+
 
         self._attr_media_content_id = media_content_id
         await self.async_call('play_media', {
